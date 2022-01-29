@@ -78,8 +78,7 @@ public:
     }
 
     vector<Document> FindTopDocuments(const string &raw_query, DocumentStatus status) const {
-        return FindTopDocuments(raw_query, [status](int document_id, DocumentStatus document_status,
-                                                    int rating) { return document_status == status; });
+        return FindTopDocuments(raw_query, [status](int document_id, DocumentStatus document_status, int rating) { return document_status == status; });
     }
 
     vector<Document> FindTopDocuments(const string &raw_query) const {
@@ -166,7 +165,6 @@ private:
         return query;
     }
 
-    // Existence required
     double ComputeWordInverseDocumentFreq(const string &word) const {
         return log(GetDocumentCount() * 1.0 / word_to_document_freqs_.at(word).size());
     }
@@ -188,38 +186,24 @@ private:
 
         for (const string &word: query.minus_words) {
             if (word_to_document_freqs_.count(word) == 0) continue;
-            for (const auto[document_id, _]: word_to_document_freqs_.at(word)) {
-                document_to_relevance.erase(document_id);
-            }
+            for (const auto[document_id, _]: word_to_document_freqs_.at(word)) document_to_relevance.erase(document_id);
         }
-
         vector<Document> matched_documents;
-        for (const auto[document_id, relevance]: document_to_relevance) {
-            matched_documents.push_back({document_id, relevance, documents_.at(document_id).rating});
-        }
+        for (const auto[document_id, relevance]: document_to_relevance) matched_documents.push_back({document_id, relevance, documents_.at(document_id).rating});
         return matched_documents;
     }
 };
 
 void PrintDocument(const Document &document) {
-    cout << "{ "s
-         << "document_id = "s << document.id << ", "s
-         << "relevance = "s << document.relevance << ", "s
-         << "rating = "s << document.rating
-         << " }"s << endl;
+    cout << "{ document_id = "s << document.id << ", relevance = "s << document.relevance << ", rating = "s << document.rating << " }"s << endl;
 }
 
 int main() {
     SearchServer search_server;
     search_server.SetStopWords("и в на"s);
-
     search_server.AddDocument(0, "белый кот и модный ошейник"s, DocumentStatus::ACTUAL, {8, -3});
     search_server.AddDocument(1, "пушистый кот пушистый хвост"s, DocumentStatus::ACTUAL, {7, 2, 7});
     search_server.AddDocument(2, "ухоженный пёс выразительные глаза"s, DocumentStatus::ACTUAL, {5, -12, 2, 1});
-
-    for (const Document &document: search_server.FindTopDocuments("ухоженный кот"s)) {
-        PrintDocument(document);
-    }
-
+    for (const Document &document: search_server.FindTopDocuments("ухоженный кот"s)) PrintDocument(document);
     return 0;;
 }
